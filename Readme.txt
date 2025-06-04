@@ -1,6 +1,6 @@
 Project Name
 
-Deep learning-based fast automated measurement and characterization of 2D materials using scanning probe microscopy
+Autonomous high-throughput measurement and characterization of 2D materials using scanning probe microscopy
 
 ============
 
