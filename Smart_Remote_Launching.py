@@ -7,39 +7,33 @@ from glob import glob
 from datetime import datetime
 from typing import List, Tuple, Optional
 
-# 가정: 이 모듈들이 존재한다고 가정
 from control.ZeroScan_v2 import zeroScanFX, get_xy_stage, _moveTo
 from Segmentation import segmentation
 from SmartRemote import SmartRemote as SR
 
 class SmartScanningSystem:
     def __init__(self, base_data_dir: str = "D:\\SpmData\\JaeukSung\\Project\\Project\\Data"):
-        """
-        스마트 스캐닝 시스템 초기화
-        
-        Args:
-            base_data_dir: 데이터 저장 기본 디렉토리
-        """
+
         self.base_data_dir = base_data_dir
         self.approximate_dir = os.path.join(base_data_dir, "Approximate")
         self.precision_dir = os.path.join(base_data_dir, "Precision")
         
-        # 디렉토리 생성
+
         os.makedirs(self.approximate_dir, exist_ok=True)
         os.makedirs(self.precision_dir, exist_ok=True)
         
-        # SmartRemote 연결
+
         self.sr = SR()
         self.check_connections()
     
     def check_connections(self) -> bool:
-        """SmartRemote 연결 상태 확인"""
+       
         try:
             connection = self.sr.check_connection()
             print(f'SmartRemote connection: {connection}')
             
-            # PowerScript 상태 확인 (메서드 이름 수정)
-            status = self.sr.check_status()  # 괄호 추가
+            
+            status = self.sr.check_status()  
             print(f'PowerScript status: {status}')
             
             return connection and status
@@ -48,23 +42,12 @@ class SmartScanningSystem:
             return False
     
     def generate_scan_session_id(self) -> str:
-        """스캔 세션 ID 생성 (날짜 기반)"""
+        
         return datetime.now().strftime("%y%m%d_%H%M%S")
     
     def perform_approximate_scan(self, x_range: float, y_range: float, 
                                scan_resolution: int = 256, scan_speed: float = 0.5) -> str:
-        """
-        대략적인 스캔 수행
-        
-        Args:
-            x_range: X 방향 스캔 범위 (μm)
-            y_range: Y 방향 스캔 범위 (μm)
-            scan_resolution: 스캔 해상도
-            scan_speed: 스캔 속도
-            
-        Returns:
-            스캔 데이터 디렉토리 경로
-        """
+
         session_id = self.generate_scan_session_id()
         scan_dir = os.path.join(self.approximate_dir, f"{session_id}_ZeroScan")
         
@@ -80,15 +63,7 @@ class SmartScanningSystem:
             return ""
     
     def analyze_scan_data(self, scan_dir: str) -> List[List[float]]:
-        """
-        스캔 데이터 분석 및 관심 영역 추출
-        
-        Args:
-            scan_dir: 스캔 데이터 디렉토리
-            
-        Returns:
-            관심 영역 리스트 [x, y, size]
-        """
+
         try:
             print("Analyzing scan data for segmentation...")
             center_list, mask_sizes = segmentation(scan_dir)
@@ -108,27 +83,16 @@ class SmartScanningSystem:
                                       original_range: Tuple[float, float],
                                       scan_resolution: int = 256,
                                       size_multiplier: float = 4.0) -> Tuple[float, float, float]:
-        """
-        정밀 스캔 매개변수 계산
-        
-        Args:
-            detection_result: [x, y, size] 형태의 검출 결과
-            original_range: (x_range, y_range) 원본 스캔 범위
-            scan_resolution: 스캔 해상도
-            size_multiplier: 크기 배수
-            
-        Returns:
-            (offset_x, offset_y, scan_size) 정밀 스캔 매개변수
-        """
+
         x_pos, y_pos, detected_size = detection_result[:3]
         x_range, y_range = original_range
         
-        # 이미지 중심을 기준으로 오프셋 계산
+        
         center_pixel = scan_resolution / 2
         offset_x = (x_pos - center_pixel) / scan_resolution * x_range
-        offset_y = -(y_pos - center_pixel) / scan_resolution * y_range  # Y 좌표 반전
+        offset_y = -(y_pos - center_pixel) / scan_resolution * y_range  
         
-        # 스캔 크기 계산
+        
         normalized_size = detected_size / (scan_resolution ** 2)
         calculated_size = math.sqrt(normalized_size * x_range * y_range)
         scan_size = size_multiplier + calculated_size
@@ -138,19 +102,7 @@ class SmartScanningSystem:
     def perform_precision_scan(self, offset_x: float, offset_y: float, 
                              scan_size: float, scan_index: int,
                              scan_resolution: int = 256, scan_speed: float = 1.0) -> bool:
-        """
-        정밀 스캔 수행
-        
-        Args:
-            offset_x, offset_y: 스캔 오프셋
-            scan_size: 스캔 크기
-            scan_index: 스캔 인덱스
-            scan_resolution: 스캔 해상도
-            scan_speed: 스캔 속도
-            
-        Returns:
-            성공 여부
-        """
+
         try:
             session_id = self.generate_scan_session_id()
             precision_scan_dir = os.path.join(self.precision_dir, 
@@ -170,26 +122,17 @@ class SmartScanningSystem:
     
     def move_stage_safely(self, target_x: float, target_y: float, 
                          max_attempts: int = 3) -> bool:
-        """
-        안전한 스테이지 이동
-        
-        Args:
-            target_x, target_y: 목표 좌표
-            max_attempts: 최대 시도 횟수
-            
-        Returns:
-            이동 성공 여부
-        """
+
         for attempt in range(max_attempts):
             try:
                 print(f"Moving stage to ({target_x:.2f}, {target_y:.2f}) - Attempt {attempt + 1}")
                 _moveTo(target_x, target_y)
                 
-                # 이동 확인
-                time.sleep(1)  # 안정화 대기
+                
+                time.sleep(1)
                 current_x, current_y = get_xy_stage()
                 
-                # 허용 오차 내 도달 확인 (예: 1 μm)
+                
                 if abs(current_x - target_x) < 1.0 and abs(current_y - target_y) < 1.0:
                     print(f"Stage moved successfully to ({current_x:.2f}, {current_y:.2f})")
                     return True
@@ -200,7 +143,7 @@ class SmartScanningSystem:
             except Exception as e:
                 print(f"Stage movement attempt {attempt + 1} failed: {e}")
                 if attempt < max_attempts - 1:
-                    time.sleep(2)  # 재시도 전 대기
+                    time.sleep(2)  
         
         return False
     
@@ -208,18 +151,7 @@ class SmartScanningSystem:
                      x_iterations: int = 5, y_iterations: int = 5,
                      approximate_resolution: int = 256,
                      precision_resolution: int = 256) -> bool:
-        """
-        그리드 스캔 실행
-        
-        Args:
-            x_range, y_range: 각 스캔 포인트의 스캔 범위
-            x_iterations, y_iterations: 그리드 반복 횟수
-            approximate_resolution: 대략 스캔 해상도
-            precision_resolution: 정밀 스캔 해상도
-            
-        Returns:
-            전체 스캔 성공 여부
-        """
+
         if not self.check_connections():
             print("Cannot proceed: SmartRemote connection failed")
             return False
@@ -227,7 +159,7 @@ class SmartScanningSystem:
         print(f"Starting grid scan: {x_iterations}x{y_iterations} grid, "
               f"each point {x_range}x{y_range} μm")
         
-        # 시작 위치 저장
+        
         try:
             start_x, start_y = get_xy_stage()
             print(f"Starting position: ({start_x:.2f}, {start_y:.2f})")
@@ -243,25 +175,25 @@ class SmartScanningSystem:
                 try:
                     print(f"\n--- Grid position ({i+1}/{x_iterations}, {j+1}/{y_iterations}) ---")
                     
-                    # 현재 위치 확인
+                    
                     current_x, current_y = get_xy_stage()
                     print(f"Current stage position: ({current_x:.2f}, {current_y:.2f})")
                     
-                    # 1. 대략적인 스캔
+                    
                     scan_dir = self.perform_approximate_scan(x_range, y_range, approximate_resolution)
                     if not scan_dir:
                         print("Approximate scan failed, skipping this position")
                         continue
                     
-                    # 2. 세그멘테이션 분석
+                    
                     detections = self.analyze_scan_data(scan_dir)
                     if not detections:
                         print("No objects detected, moving to next position")
-                        successful_scans += 1  # 스캔은 성공했지만 객체 없음
+                        successful_scans += 1  
                         total_scans += 1
                         continue
                     
-                    # 3. 정밀 스캔
+                    
                     precision_success_count = 0
                     for k, detection in enumerate(detections):
                         offset_x, offset_y, scan_size = self.calculate_precision_scan_params(
@@ -276,8 +208,8 @@ class SmartScanningSystem:
                     successful_scans += 1
                     total_scans += 1
                     
-                    # Y 방향 이동 (다음 행)
-                    if j < y_iterations - 1:  # 마지막 행이 아닌 경우
+                    
+                    if j < y_iterations - 1:  
                         target_y = current_y + y_range
                         if not self.move_stage_safely(current_x, target_y):
                             print("Failed to move to next Y position")
@@ -288,12 +220,12 @@ class SmartScanningSystem:
                     total_scans += 1
                     continue
             
-            # X 방향 이동 (다음 열) 및 Y 리셋
-            if i < x_iterations - 1:  # 마지막 열이 아닌 경우
+            
+            if i < x_iterations - 1:
                 try:
                     current_x, current_y = get_xy_stage()
                     target_x = start_x + (i + 1) * x_range
-                    target_y = start_y  # Y 위치 리셋
+                    target_y = start_y  
                     
                     if not self.move_stage_safely(target_x, target_y):
                         print("Failed to move to next X position")
@@ -303,7 +235,7 @@ class SmartScanningSystem:
                     print(f"Error moving to next column: {e}")
                     break
         
-        # 결과 요약
+        
         print(f"\n--- Grid Scan Completed ---")
         print(f"Total positions: {total_scans}")
         print(f"Successful scans: {successful_scans}")
@@ -311,22 +243,22 @@ class SmartScanningSystem:
         
         return successful_scans > 0
 
-# 사용 예시
+
 if __name__ == "__main__":
-    # 시스템 초기화
+    
     scanner = SmartScanningSystem()
     
-    # 스캔 매개변수 설정
+    
     scan_params = {
         'x_range': 60,          # μm
         'y_range': 60,          # μm
-        'x_iterations': 5,      # 5x5 그리드
+        'x_iterations': 5,      # 5x5 
         'y_iterations': 5,
         'approximate_resolution': 256,
         'precision_resolution': 256
     }
     
-    # 그리드 스캔 실행
+
     success = scanner.run_grid_scan(**scan_params)
     
     if success:
