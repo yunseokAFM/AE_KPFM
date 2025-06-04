@@ -25,7 +25,6 @@ setup_logger()
 warnings.filterwarnings(action='ignore')
 
 def get_cfg_cpu():
-    """CPU용 Detectron2 설정 반환"""
     cfg = get_cfg()
     cfg.merge_from_file(
         model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
@@ -34,47 +33,33 @@ def get_cfg_cpu():
     return cfg
 
 def get_object_dicts(img_dir: str) -> List[dict]:
-    """
-    간단한 데이터셋 로더 (실제 프로젝트에서는 적절히 수정 필요)
-    """
-    # 실제 구현에서는 어노테이션 파일을 읽어야 함
     return []
 
 def find_latest_error_forward_file(directory: str) -> Optional[str]:
-    """
-    Error Signal_Forward가 포함된 가장 최근 파일 찾기
-    
-    Args:
-        directory: 검색할 디렉토리 경로
-        
-    Returns:
-        가장 최근 파일의 경로 또는 None
-    """
+
     try:
-        # 디렉토리 존재 확인
         if not os.path.exists(directory):
             print(f"Error: Directory {directory} does not exist")
             return None
             
-        # 패턴 매칭으로 파일 검색
+
         search_patterns = [
             os.path.join(directory, "*Error Signal_Forward*"),
             os.path.join(directory, "*Error*Signal*Forward*"),
-            os.path.join(directory, "**", "*Error Signal_Forward*")  # 하위 폴더 포함
+            os.path.join(directory, "**", "*Error Signal_Forward*")
         ]
         
         files = []
         for pattern in search_patterns:
             files.extend(glob.glob(pattern, recursive=True))
-        
-        # 중복 제거
+
         files = list(set(files))
         
         if not files:
             print(f"No files containing 'Error Signal_Forward' found in {directory}")
             return None
         
-        # 가장 최근 파일 찾기
+
         latest_file = max(files, key=os.path.getmtime)
         print(f"Found latest file: {latest_file}")
         return latest_file
@@ -84,12 +69,12 @@ def find_latest_error_forward_file(directory: str) -> Optional[str]:
         return None
 
 def validate_image(image_path: str) -> bool:
-    """이미지 파일 유효성 검사"""
+
     if not os.path.exists(image_path):
         print(f"Error: Image file {image_path} does not exist")
         return False
     
-    # 파일 크기 확인
+
     if os.path.getsize(image_path) == 0:
         print(f"Error: Image file {image_path} is empty")
         return False
@@ -97,15 +82,15 @@ def validate_image(image_path: str) -> bool:
     return True
 
 def setup_detectron2_datasets():
-    """Detectron2 데이터셋 등록"""
+
     for d in ["train", "val"]:
         dataset_name = f"object_{d}"
         
-        # 기존 데이터셋 제거
+
         if dataset_name in DatasetCatalog.list():
             DatasetCatalog.remove(dataset_name)
             
-        # 새 데이터셋 등록
+
         try:
             DatasetCatalog.register(
                 dataset_name, 
@@ -120,26 +105,15 @@ def segmentation(test_directory: str,
                 model_path: str = None,
                 score_threshold: float = 0.7,
                 visualize: bool = True) -> Tuple[List[List[float]], List[float]]:
-    """
-    Detectron2를 사용한 이미지 세그멘테이션
-    
-    Args:
-        test_directory: 테스트 이미지가 있는 디렉토리
-        model_path: 훈련된 모델 경로 (None이면 기본 경로 사용)
-        score_threshold: 검출 임계값
-        visualize: 결과 시각화 여부
-        
-    Returns:
-        Tuple[center_list, mask_sizes]: 중심 좌표와 마스크 크기 리스트
-    """
+
     center_list = []
     mask_sizes = []
     
     try:
-        # 데이터셋 설정
+
         setup_detectron2_datasets()
         
-        # 모델 설정
+
         cfg = get_cfg_cpu()
         cfg.DATASETS.TRAIN = ("object_train",)
         cfg.DATASETS.TEST = ()
@@ -152,7 +126,7 @@ def segmentation(test_directory: str,
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = score_threshold
         
-        # 모델 가중치 설정
+
         if model_path is None:
             model_path = os.path.join("output", "model_final.pth")
             
@@ -163,16 +137,16 @@ def segmentation(test_directory: str,
         cfg.MODEL.WEIGHTS = model_path
         predictor = DefaultPredictor(cfg)
         
-        # 최신 이미지 파일 찾기
+
         latest_file = find_latest_error_forward_file(test_directory)
         if not latest_file:
             return center_list, mask_sizes
             
-        # 이미지 유효성 검사
+
         if not validate_image(latest_file):
             return center_list, mask_sizes
         
-        # 이미지 읽기
+
         im = cv2.imread(latest_file, cv2.IMREAD_UNCHANGED)
         if im is None:
             print(f"Error: Could not read image {latest_file}")
@@ -180,7 +154,7 @@ def segmentation(test_directory: str,
             
         print(f"Image shape: {im.shape}")
         
-        # 예측 수행
+
         outputs = predictor(im)
         instances = outputs["instances"]
         
@@ -194,10 +168,10 @@ def segmentation(test_directory: str,
         
         print(f"Detected {len(instances)} objects")
         
-        # 각 검출된 객체 처리
+
         for i, (box, mask, score) in enumerate(zip(boxes, masks, scores)):
             try:
-                # 컨투어 찾기
+
                 contours, _ = cv2.findContours(
                     mask.astype(np.uint8), 
                     cv2.RETR_EXTERNAL, 
@@ -208,10 +182,10 @@ def segmentation(test_directory: str,
                     print(f"No contours found for object {i}")
                     continue
                     
-                # 가장 큰 컨투어 선택
+                
                 largest_contour = max(contours, key=cv2.contourArea)
                 
-                # 중심 좌표 계산
+                
                 M = cv2.moments(largest_contour)
                 if M["m00"] != 0:
                     cX = int(M["m10"] / M["m00"])
@@ -229,10 +203,10 @@ def segmentation(test_directory: str,
                 print(f"Error processing object {i}: {e}")
                 continue
         
-        # 시각화
+        
         if visualize and len(instances) > 0:
             try:
-                # RGB로 변환 (BGR -> RGB)
+                #(BGR -> RGB)
                 if len(im.shape) == 3:
                     im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
                 else:
@@ -261,7 +235,7 @@ def segmentation(test_directory: str,
         
     return center_list, mask_sizes
 
-# 사용 예시
+
 if __name__ == "__main__":
     test_dir = "Data/Approximate/241108_ZeroScan"
     centers, sizes = segmentation(test_dir)
