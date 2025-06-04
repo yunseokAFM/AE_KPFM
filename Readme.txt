@@ -14,14 +14,8 @@ modalities.
 TABLE OF CONTENTS
 -----------------
 1. Features
-3. Requirements
-4. Installation
-5. Usage
-6. Configuration
-7. Examples
-8. Contributing
-9. License
-10. Contact
+2. Requirements
+3. Contact
 
 
 1. FEATURES
@@ -35,7 +29,7 @@ TABLE OF CONTENTS
 - Segmentation.py : Code containing Mask R-CNN procedure for segmentation 
 - Smart_Remote_Launching.py : Code containing smart remote operation for automated 2D material scanning
 
-3. REQUIREMENTS
+2. REQUIREMENTS
 ---------------
 List any prerequisites needed to run this project:
 - Python 3.10
@@ -49,13 +43,9 @@ List any prerequisites needed to run this project:
 - pytorch
 - cuda
 
-3.1. PSPYLIB & SmartRemote (Proprietary)
+2.1. PSPYLIB & SmartRemote (Proprietary)
 This project relies on two proprietary components supplied by Park Systems Inc.: the `pspylib` Python library and the `SmartRemote.py` script. These files are **not** included in this repository.
 
-4. USAGE
+3. Contact
 --------
-
-- Git clone to download the files 
-- Install requirments
-- Run segmentation.py for training Mask R-CNN for your own 2D materials 
-- Adjust Smart_Remote_Launching.py parameters and directories according to your own needs. 
+https://sites.google.com/view/yunseokkim
