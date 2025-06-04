@@ -41,7 +41,6 @@ List any prerequisites needed to run this project:
 - Python 3.10
 - Pandas
 - shutil
-- pspylib
 - tiffread
 - Pillow
 - Matplotlib
@@ -50,6 +49,8 @@ List any prerequisites needed to run this project:
 - pytorch
 - cuda
 
+3.1. PSPYLIB & SmartRemote (Proprietary)
+This project relies on two proprietary components supplied by Park Systems Inc.: the `pspylib` Python library and the `SmartRemote.py` script. These files are **not** included in this repository.
 
 4. USAGE
 --------
