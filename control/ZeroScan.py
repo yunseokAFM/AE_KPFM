@@ -11,12 +11,11 @@ def zeroScanNX(baseDir='D:\SPMdata\성재욱\SmartRemote 1\Project\Data', pixelH
     _setDataLocation(baseDir)
     _startImageScan()
 
-# Powerscript manual 에 나오는 함수 그대로 다 넣으면 됨 → 넣고 싶은 변수의 종류만 만듬
+
 def zeroScanFX(baseDir,pixelHeight:int=256, offset_x:float=2., offset_y:float=2.,target_X:float=2., target_Y:float=2.,pixelWidth:int=256, width:float=2.,height:float=2., scanRate:float=2.):
     #_autoAlign()
     #_channles_init()
 
-    # Scan 할때, pixel / Scan Window / offset 설정
     _setScanGeometry(PH=pixelHeight, PW=pixelWidth, w=width, h=height, oX=offset_x, oY=offset_y)
     _setScanOption()
     _moveTo(Tx = target_X, Ty = target_Y)
@@ -103,12 +102,12 @@ def _setDataLocation(baseDir:str='C:\\SpmData', file_name:str='ZeroScan'):
     reply = sr.run(f'spm.dataLocation={json_loc}')
     return reply['result']
 
-# Approach 함수
+# Approach
 def _approach(mode:str="q+s"):
     reply = sr.run(f'spm.approach.start(\'{mode}\')')
     return reply['result']
 
-# Image Scan 명령
+# Image Scan
 def _startImageScan():
     reply = sr.run('spm.scan.startImageScan()')
 
