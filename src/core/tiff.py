@@ -17,7 +17,7 @@ class Read_tiff:
         dict['COLORMAP'] = self.__colormap_to_matplot()
         dict['COLORMAP'] = self.__colormap_to_matplot()
         if dict['IMAGE'] is not None:
-            print("IMAGE shape:", dict['IMAGE'].shape)  # 디버깅 출력
+            print("IMAGE shape:", dict['IMAGE'].shape) 
         else:
             print("IMAGE data is None")
         return dict  # Only return the dictionary
@@ -61,30 +61,30 @@ class Read_tiff:
                     continue
             return numbers
 
-        # height와 width 값을 정수 리스트로 변환
+        
         heights = to_int_list(header['height'])
         widths = to_int_list(header['width'])
 
-        # height와 width의 최대값 찾기
+        
         if not heights or not widths:
             raise ValueError("Height or width values are invalid or empty.")
 
         height = max(heights)
         width = max(widths)
 
-        # shape을 설정할 때 정수로 변환
+        
         dshape = (height, width)
         npy = np.reshape(Zdata, dshape)
         npy = np.flipud(npy)
         return npy
 
     def calculate_xy_coordinates(self, header):
-        scan_width = header['scanSizeWidth']  # 스캔 영역의 너비 (단위: um)
-        scan_height = header['scanSizeHeight']  # 스캔 영역의 높이 (단위: um)
-        width = header['width']  # 데이터의 가로 해상도 (픽셀 수)
-        height = header['height']  # 데이터의 세로 해상도 (픽셀 수)
+        scan_width = header['scanSizeWidth'] 
+        scan_height = header['scanSizeHeight']  
+        width = header['width']  
+        height = header['height']  
         
-        # x, y 좌표 배열 생성
+        
         x_coords = np.linspace(0, scan_width, width)
         y_coords = np.linspace(0, scan_height, height)
     
