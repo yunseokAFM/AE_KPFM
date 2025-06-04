@@ -21,18 +21,18 @@ import json
 import numpy as np
 from detectron2.engine import DefaultTrainer
 from detectron2.utils.visualizer import ColorMode
-import torch  # PyTorch 라이브러리 추가
+import torch  
 
-# 모델 설정을 불러와서 GPU에서 실행하도록 설정하고, GPU가 없으면 CPU에서 실행되도록 설정하는 함수
+
 def get_cfg_cpu():
     cfg = get_cfg()
-    cfg.MODEL.DEVICE = "cpu"  # CPU에서 실행
+    cfg.MODEL.DEVICE = "cpu"  
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
     return cfg
 
 
-# 주어진 디렉토리에서 JSON 파일을 읽어와서 데이터셋을 생성하는 함수 - 이미지 파일과 관련된 주석정보를 로드하고, 각 이미지를 위한 주석을 저장한다.
+
 def get_object_dicts(img_dir):
     import glob
     
@@ -40,7 +40,7 @@ def get_object_dicts(img_dir):
     annotations = []
     images = []
 
-    # 디렉토리 내 모든 JSON 파일 읽기
+    
     json_files = glob.glob(os.path.join(img_dir, "*.json"))
     for json_file in json_files:
         with open(json_file) as f:
@@ -48,7 +48,7 @@ def get_object_dicts(img_dir):
         images.extend(data.get("images", []))
         annotations.extend(data.get("annotations", []))
 
-    # 이미지 ID로 어노테이션 그룹화
+    
     annos_by_image_id = {}
     for anno in annotations:
         image_id = anno["image_id"]
@@ -56,7 +56,6 @@ def get_object_dicts(img_dir):
             annos_by_image_id[image_id] = []
         annos_by_image_id[image_id].append(anno)
 
-    # 이미지와 어노테이션 매칭
     for img in images:
         record = {
             "file_name": os.path.join(img_dir, img["file_name"]),
