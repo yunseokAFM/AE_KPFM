@@ -1,51 +1,91 @@
-Project Name
+# AI-Powered Automated SPM Scanning System
 
-Autonomous high-throughput measurement and characterization of 2D materials using scanning probe microscopy
+## Overview
 
-============
+The system performs grid-based scanning, analyzes scan data using Detectron2-based object detection, and executes targeted high-resolution scans on detected features.
 
-Description
+## Prerequisites
 
-This automated AFM pipeline reduced analysis time by massively compared to manual
-approaches, exapnding its scalability for diverse 2D materials and various AFM imaging
-modalities. 
+### Software Requirements
+```
+Python >= 3.8
+PyTorch >= 1.9.0
+Detectron2 >= 0.6
+OpenCV >= 4.5.0
+NumPy >= 1.21.0
+Matplotlib >= 3.3.0
+scikit-learn >= 1.0.0
+```
 
+### System Setup
+1. **SPM Connection**: Ensure SmartRemote server
+2. **AI Model**: Pre-trained model at `output/model_final.pth`
 
-TABLE OF CONTENTS
------------------
-1. Features
-2. Requirements
-3. Contact
+## Quick Start Guide
 
+### 1. Initial Setup
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-1. FEATURES
------------
-- src : Folder containing functions necessary for Smart Remote operation 
-- wheel : Folder containing python installation files for Tiff file reading and smart remote operation
-- tiff : Folder containing codes necessary for reading Tiff files
-- control : Folder containing functions that dictates AFM movements
-- output : Folder containing Mask R-CNN training result
-- object : train, validation, test annotated samples 
-- Segmentation.py : Code containing Mask R-CNN procedure for segmentation 
-- Smart_Remote_Launching.py : Code containing smart remote operation for automated 2D material scanning
+```
 
-2. REQUIREMENTS
----------------
-List any prerequisites needed to run this project:
-- Python 3.10
-- Pandas
-- shutil
-- tiffread
-- Pillow
-- Matplotlib
-- Detectron2
-- numpy
-- pytorch
-- cuda
+### 2. Basic Operation
+```python
+from Smart_remote import SmartScanningSystem, ScanParams
 
-2.1. PSPYLIB & SmartRemote (Proprietary)
-This project relies on two proprietary components supplied by Park Systems Inc.: the `pspylib` Python library and the `SmartRemote.py` script. These files are **not** included in this repository.
+# Configure scan parameters
+scan_params = ScanParams(
+    x_range=60.0,           # Scan width (μm)
+    y_range=60.0,           # Scan height (μm) 
+    x_iterations=5,         # Grid columns
+    y_iterations=5,         # Grid rows
+    approximate_resolution=256,    # Initial scan resolution
+    precision_resolution=256,      # High-res scan resolution
+    score_threshold=0.7     # AI detection confidence threshold
+)
 
-3. Contact
---------
-https://sites.google.com/view/yunseokkim
+# Execute automated scanning
+scanner = SmartScanningSystem()
+success = scanner.run_grid_scan(scan_params)
+```
+
+### 3. Workflow Execution
+The system automatically executes the following sequence:
+1. **Grid Navigation**: Moves SPM stage to each grid position
+2. **Approximate Scanning**: Performs initial scan at each position
+3. **AI Analysis**: Detects objects using trained CNN model
+4. **Precision Scanning**: Executes high-resolution scans on detected features
+5. **Statistical Analysis**: Applies GMM/KDE analysis to scan results
+
+## Configuration
+
+### Scan Parameters
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `x_range` | Scan area width (μm) | 60.0 | 1-500 |
+| `y_range` | Scan area height (μm) | 60.0 | 1-500 |
+| `x_iterations` | Grid columns | 5 | 1-20 |
+| `y_iterations` | Grid rows | 5 | 1-20 |
+| `score_threshold` | AI confidence threshold | 0.7 | 0.1-1.0 |
+| `size_multiplier` | Precision scan size factor | 4.0 | 1.0-10.0 |
+
+### Data Storage Structure
+```
+Data/
+├── Approximate/          # Initial grid scans
+│   └── YYMMDD_HHMMSS_ZeroScan/
+├── Precision/            # High-resolution targeted scans
+│   └── YYMMDD_HHMMSS_Precision_N/
+└── Analysis/             # Statistical analysis results
+    ├── spatial_data.csv
+    ├── gmm_results.csv
+    └── visualization.png
+```
+
+### Statistical Analysis
+The system provides comprehensive GMM analysis:
+- **Model Selection**: Automatic component number optimization using BIC/AIC
+- **Statistical Validation**: Dip test for multimodality assessment  
+- **Visualization**: Multi-panel analysis plots and individual component visualization
+
