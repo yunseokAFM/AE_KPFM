@@ -26,13 +26,13 @@ import torch
 
 def get_cfg_cpu():
     cfg = get_cfg()
-    cfg.MODEL.DEVICE = "cpu"  
+    cfg.MODEL.DEVICE = "cpu" 
     cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
     return cfg
 
 
-
+# JSON annotation from ground truth data
 def get_object_dicts(img_dir):
     import glob
     
@@ -40,7 +40,7 @@ def get_object_dicts(img_dir):
     annotations = []
     images = []
 
-    
+    # Read JSON file
     json_files = glob.glob(os.path.join(img_dir, "*.json"))
     for json_file in json_files:
         with open(json_file) as f:
@@ -48,13 +48,14 @@ def get_object_dicts(img_dir):
         images.extend(data.get("images", []))
         annotations.extend(data.get("annotations", []))
 
-    
+
     annos_by_image_id = {}
     for anno in annotations:
         image_id = anno["image_id"]
         if image_id not in annos_by_image_id:
             annos_by_image_id[image_id] = []
         annos_by_image_id[image_id].append(anno)
+
 
     for img in images:
         record = {
